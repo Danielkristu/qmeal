@@ -74,7 +74,7 @@ export default function MenuPage() {
         </header>
 
         {/* Categories */}
-        <div style={styles.tabsWrap}>
+        <div className="hide-scrollbar" style={styles.tabsWrap}>
           {CATEGORIES.map((cat) => (
             <button
               key={cat}
@@ -155,7 +155,7 @@ const styles: Record<string, React.CSSProperties> = {
   storeBadge: { display: "flex", alignItems: "center", gap: 6, background: "#E8F5E9", color: "#2E7D32", padding: "4px 10px", borderRadius: 12, fontSize: 11, fontWeight: 700, textTransform: "uppercase" },
   storeDot: { width: 6, height: 6, borderRadius: 3, background: "#4CAF50" },
 
-  tabsWrap: { display: "flex", gap: 8, overflowX: "auto", padding: "0 20px 16px", scrollbarWidth: "none", WebkitOverflowScrolling: "touch", className: "hide-scrollbar" },
+  tabsWrap: { display: "flex", gap: 8, overflowX: "auto", padding: "0 20px 16px", scrollbarWidth: "none", WebkitOverflowScrolling: "touch" },
   tabActive: { background: "#1A1A18", color: "#fff", border: "none", borderRadius: 20, padding: "8px 16px", fontSize: 13, fontWeight: 500, whiteSpace: "nowrap", flexShrink: 0 },
   tabInactive: { background: "#fff", color: "#888", border: "1px solid #EDEBE4", borderRadius: 20, padding: "8px 16px", fontSize: 13, fontWeight: 500, whiteSpace: "nowrap", flexShrink: 0 },
 
