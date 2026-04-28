@@ -1,6 +1,7 @@
 import type { Metadata } from "next"
 import { Geist, Geist_Mono } from "next/font/google"
 import { Toaster } from "sonner"
+import { CartProvider } from "@/context/cart-context"
 import "./globals.css"
 
 const geistSans = Geist({
@@ -31,17 +32,19 @@ export default function RootLayout({
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
     >
       <body className="min-h-full flex flex-col">
-        {children}
-        <Toaster
-          position="top-center"
-          richColors
-          closeButton
-          toastOptions={{
-            style: {
-              borderRadius: "12px",
-            },
-          }}
-        />
+        <CartProvider>
+          {children}
+          <Toaster
+            position="top-center"
+            richColors
+            closeButton
+            toastOptions={{
+              style: {
+                borderRadius: "12px",
+              },
+            }}
+          />
+        </CartProvider>
       </body>
     </html>
   )

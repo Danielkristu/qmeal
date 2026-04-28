@@ -32,6 +32,26 @@ export async function GET(req: NextRequest) {
     const pendingList = pendingOrders.map(o => ({ id: o.id, num: o.order_number.split("-").pop() }))
     const preparingList = preparingOrders.map(o => ({ id: o.id, num: o.order_number.split("-").pop() }))
 
+    // 3. Get the latest PREPARING order with full details for printing
+    // We only take the most recent one to keep the payload small.
+    // The Arduino can track if it has already printed this ID locally.
+    const { data: latestPreparing } = await supabase
+      .from("orders")
+      .select("*, order_items(*)")
+      .eq("status", "PREPARING")
+      .order("updated_at", { ascending: false })
+      .limit(1)
+      .single()
+
+    const receipt = latestPreparing ? {
+      id: latestPreparing.id,
+      n: latestPreparing.order_number,
+      i: latestPreparing.order_items.map((item: any) => `${item.quantity}x ${item.item_name}`).join("|"),
+      t: latestPreparing.total_amount,
+      nt: latestPreparing.notes || "",
+      ts: latestPreparing.updated_at
+    } : null
+
     const timeStr = new Date().toLocaleTimeString('en-US', { hour12: false, hour: '2-digit', minute: '2-digit', second: '2-digit' })
 
     // Provide a compressed payload optimized for low-memory microcontrollers
@@ -41,7 +61,8 @@ export async function GET(req: NextRequest) {
       p_count: preparingList.length,
       pending: pendingList,
       preparing: preparingList,
-      rdy_nums: readyOrders.map(o => o.order_number.split("-").pop()).join(",") || "NONE"
+      rdy_nums: readyOrders.map(o => o.order_number.split("-").pop()).join(",") || "NONE",
+      receipt: receipt // The Arduino checks if this ID changed and prints if so
     })
     
   } catch (err: unknown) {
