@@ -9,6 +9,7 @@ import {
   type ReactNode,
 } from "react"
 import type { CartItem, MenuItem } from "@/lib/types"
+import { cartKey } from "@/lib/session"
 
 // ─── Context shape ────────────────────────────────────────────────────────────
 
@@ -20,44 +21,51 @@ interface CartContextValue {
   clearCart: () => void
   totalItems: number
   totalAmount: number
+  sessionId: string | null
 }
 
 const CartContext = createContext<CartContextValue | null>(null)
 
-const STORAGE_KEY = "qmeal_cart_items"
-
 // ─── Provider ────────────────────────────────────────────────────────────────
 
-export function CartProvider({ children }: { children: ReactNode }) {
+interface CartProviderProps {
+  children: ReactNode
+  sessionId?: string   // When provided, cart is scoped to this session
+}
+
+export function CartProvider({ children, sessionId }: CartProviderProps) {
   const [items, setItems] = useState<CartItem[]>([])
   const [hydrated, setHydrated] = useState(false)
 
-  // Rehydrate from localStorage on mount (client-only)
+  // The key changes when sessionId changes, so cart is fully isolated
+  const storageKey = sessionId ? cartKey(sessionId) : "qmeal_cart_global"
+
+  // Rehydrate from localStorage on mount / sessionId change
   useEffect(() => {
+    setHydrated(false)
+    setItems([])   // Clear previous session's items immediately
     try {
-      const stored = localStorage.getItem(STORAGE_KEY)
+      const stored = localStorage.getItem(storageKey)
       if (stored) {
         const parsed: CartItem[] = JSON.parse(stored)
-        if (Array.isArray(parsed)) {
-          setItems(parsed)
-        }
+        if (Array.isArray(parsed)) setItems(parsed)
       }
     } catch {
       // Silently ignore corrupt storage
     } finally {
       setHydrated(true)
     }
-  }, [])
+  }, [storageKey])
 
   // Persist to localStorage whenever items change (after hydration)
   useEffect(() => {
     if (!hydrated) return
     try {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(items))
+      localStorage.setItem(storageKey, JSON.stringify(items))
     } catch {
       // Silently ignore storage errors (e.g. private browsing quota)
     }
-  }, [items, hydrated])
+  }, [items, hydrated, storageKey])
 
   const addItem = useCallback((menuItem: MenuItem) => {
     setItems((prev) => {
@@ -109,6 +117,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
         clearCart,
         totalItems,
         totalAmount,
+        sessionId: sessionId ?? null,
       }}
     >
       {children}

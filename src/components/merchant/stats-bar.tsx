@@ -1,32 +1,21 @@
 "use client"
 
 import { Card } from "@/components/ui/card"
-import { Badge } from "@/components/ui/badge"
 import { BellRing, ChefHat, CheckCircle, Ticket } from "lucide-react"
 
 interface StatsBarProps {
   totalOrdersToday: number
   totalRevenueToday: number
-  pendingCount: number
   preparingCount: number
+  readyCount: number
 }
 
-export function StatsBar({ totalOrdersToday, totalRevenueToday, pendingCount, preparingCount }: StatsBarProps) {
+export function StatsBar({ totalOrdersToday, totalRevenueToday, preparingCount, readyCount }: StatsBarProps) {
   return (
     <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4 mb-6">
-      <Card className="p-4 flex items-center gap-4 bg-amber-500/5 hover:bg-amber-500/10 transition-colors border-amber-500/20">
-        <div className="p-3 bg-amber-500/20 text-amber-600 rounded-lg">
-          <BellRing className="h-5 w-5" />
-        </div>
-        <div>
-          <p className="text-xs text-muted-foreground font-medium">Menunggu</p>
-          <p className="text-2xl font-bold text-foreground">{pendingCount}</p>
-        </div>
-      </Card>
-
       <Card className="p-4 flex items-center gap-4 bg-blue-500/5 hover:bg-blue-500/10 transition-colors border-blue-500/20">
         <div className="p-3 bg-blue-500/20 text-blue-600 rounded-lg">
-          <ChefHat className="h-5 w-5" />
+          <BellRing className="h-5 w-5" />
         </div>
         <div>
           <p className="text-xs text-muted-foreground font-medium">Diproses</p>
@@ -36,11 +25,21 @@ export function StatsBar({ totalOrdersToday, totalRevenueToday, pendingCount, pr
 
       <Card className="p-4 flex items-center gap-4 bg-emerald-500/5 hover:bg-emerald-500/10 transition-colors border-emerald-500/20">
         <div className="p-3 bg-emerald-500/20 text-emerald-600 rounded-lg">
+          <ChefHat className="h-5 w-5" />
+        </div>
+        <div>
+          <p className="text-xs text-muted-foreground font-medium">Siap Diambil</p>
+          <p className="text-2xl font-bold text-foreground">{readyCount}</p>
+        </div>
+      </Card>
+
+      <Card className="p-4 flex items-center gap-4 bg-gray-500/5 hover:bg-gray-500/10 transition-colors border-gray-500/20">
+        <div className="p-3 bg-gray-500/20 text-gray-600 rounded-lg">
           <CheckCircle className="h-5 w-5" />
         </div>
         <div>
           <p className="text-xs text-muted-foreground font-medium">Selesai Hari Ini</p>
-          <p className="text-2xl font-bold text-foreground">{totalOrdersToday - pendingCount - preparingCount}</p>
+          <p className="text-2xl font-bold text-foreground">{totalOrdersToday - preparingCount - readyCount}</p>
         </div>
       </Card>
 

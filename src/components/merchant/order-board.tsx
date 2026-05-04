@@ -12,8 +12,8 @@ interface OrderBoardProps {
 export function OrderBoard({ orders, loading, onUpdateStatus }: OrderBoardProps) {
   if (loading) {
     return (
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4 animate-pulse h-[600px]">
-        {Array.from({ length: 4 }).map((_, i) => (
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 animate-pulse h-[600px]">
+        {Array.from({ length: 3 }).map((_, i) => (
           <div key={i} className="bg-card/50 rounded-xl border border-border/50" />
         ))}
       </div>
@@ -21,7 +21,6 @@ export function OrderBoard({ orders, loading, onUpdateStatus }: OrderBoardProps)
   }
 
   const columns: { id: OrderStatus; title: string; color: string; bgColor: string }[] = [
-    { id: "PENDING", title: "Menunggu", color: "text-amber-500", bgColor: "bg-amber-500/10" },
     { id: "PREPARING", title: "Diproses", color: "text-blue-500", bgColor: "bg-blue-500/10" },
     { id: "READY", title: "Siap", color: "text-emerald-500", bgColor: "bg-emerald-500/10" },
     { id: "COMPLETED", title: "Selesai", color: "text-gray-500", bgColor: "bg-gray-500/10" },
@@ -38,7 +37,7 @@ export function OrderBoard({ orders, loading, onUpdateStatus }: OrderBoardProps)
   }
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-4 gap-4 h-[calc(100vh-140px)]">
+    <div className="grid grid-cols-1 md:grid-cols-3 gap-4 h-[calc(100vh-140px)]">
       {columns.map((col) => {
         const columnOrders = getOrdersByStatus(col.id)
         return (

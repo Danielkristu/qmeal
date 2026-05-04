@@ -1,8 +1,9 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { use, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
+import { ArrowLeft } from "lucide-react";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -29,7 +30,8 @@ function pad(n: number) {
 
 // ─── Component ────────────────────────────────────────────────────────────────
 
-export default function CheckoutPage() {
+export default function CheckoutPage({ params }: { params: Promise<{ session: string }> }) {
+  const { session } = use(params);
   const router = useRouter();
 
   const [payment, setPayment] = useState<QRISPayment | null>(null);
@@ -114,11 +116,11 @@ export default function CheckoutPage() {
         ) {
           clearInterval(interval);
           // Clear cart from localStorage
-          localStorage.removeItem("qmeal_cart_items");
+          localStorage.removeItem(`qmeal_cart_${session}`);
           sessionStorage.removeItem("qmeal_cart");
           sessionStorage.removeItem("qmeal_total");
           sessionStorage.removeItem("qmeal_notes");
-          router.push(`/order/${order_id}`);
+          router.push(`/${session}/order/${order_id}`);
         } else if (status === "CANCELLED" || status === "FAILED" || status === "EXPIRED") {
           clearInterval(interval);
           setError("Pembayaran gagal atau kedaluwarsa.");
@@ -130,7 +132,7 @@ export default function CheckoutPage() {
 
     setPolling(true);
     return () => clearInterval(interval);
-  }, [payment, polling, router]);
+  }, [payment, polling, router, session]);
 
   // ── Simulate payment ─────────────────────────────────────────────────────
 
@@ -159,14 +161,14 @@ export default function CheckoutPage() {
       setSimSuccess(true);
 
       // Clear cart storage before navigating
-      localStorage.removeItem("qmeal_cart_items");
+      localStorage.removeItem(`qmeal_cart_${session}`);
       sessionStorage.removeItem("qmeal_cart");
       sessionStorage.removeItem("qmeal_total");
       sessionStorage.removeItem("qmeal_notes");
 
       // Short visual delay so user sees the success state before redirect
       setTimeout(() => {
-        router.push(`/order/${json.order_id ?? payment.order_id}`);
+        router.push(`/${session}/order/${json.order_id ?? payment.order_id}`);
       }, 800);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Simulasi gagal");
@@ -197,8 +199,8 @@ export default function CheckoutPage() {
 
         {/* Header */}
         <header style={styles.header}>
-          <button onClick={() => router.back()} style={styles.backBtn}>
-            <BackIcon />
+          <button onClick={() => router.back()} style={styles.backBtn} className="q-btn-press">
+            <ArrowLeft size={18} />
           </button>
           <h1 style={styles.headerTitle}>Pembayaran QRIS</h1>
           <div style={{ width: 36 }} />
@@ -360,9 +362,8 @@ function BackIcon() {
 // ─── Styles ───────────────────────────────────────────────────────────────────
 
 const GLOBAL_STYLE = `
-  @import url('https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700&family=DM+Sans:wght@300;400;500&display=swap');
   * { box-sizing: border-box; margin: 0; padding: 0; }
-  body { background: #F7F5F0; font-family: 'DM Sans', sans-serif; -webkit-font-smoothing: antialiased; }
+  body { background: #F7F5F0; font-family: var(--font-dm-sans); -webkit-font-smoothing: antialiased; }
 
   @keyframes spin { to { transform: rotate(360deg); } }
   @keyframes pulse { 0%,100% { opacity:1; } 50% { opacity:0.4; } }
@@ -372,110 +373,91 @@ const GLOBAL_STYLE = `
 `;
 
 const styles: Record<string, React.CSSProperties> = {
-  page: { maxWidth: 430, margin: "0 auto", minHeight: "100vh", background: "#F7F5F0" },
+  page: { minHeight: "100vh", background: "var(--q-bg)", fontFamily: "var(--font-dm-sans)" },
 
   header: {
     display: "flex", alignItems: "center", justifyContent: "space-between",
-    padding: "16px 20px", background: "#F7F5F0",
+    padding: "calc(max(20px, env(safe-area-inset-top)) + 36px) 20px 16px", background: "var(--q-bg)",
     position: "sticky", top: 0, zIndex: 20,
-    borderBottom: "1px solid #EDEBE4",
+    backdropFilter: "blur(20px)",
+    WebkitBackdropFilter: "blur(20px)",
+    borderBottom: "1px solid var(--q-border)",
   },
-  backBtn: { width: 36, height: 36, borderRadius: 10, border: "1.5px solid #E8E4DB", background: "#fff", display: "flex", alignItems: "center", justifyContent: "center", color: "#1A1A18", cursor: "pointer" },
-  headerTitle: { fontFamily: "'Syne', sans-serif", fontSize: 17, fontWeight: 700, color: "#1A1A18" },
+  backBtn: { width: 42, height: 42, borderRadius: 14, border: "1.5px solid var(--q-border)", background: "var(--q-surface)", display: "flex", alignItems: "center", justifyContent: "center", color: "var(--q-text-primary)", cursor: "pointer", boxShadow: "var(--q-shadow-sm)" },
+  headerTitle: { fontFamily: "var(--font-dm-serif)", fontSize: 24, fontWeight: 400, letterSpacing: "-0.02em", color: "var(--q-text-primary)" },
 
   main: { padding: "20px" },
 
   amountPill: {
-    background: "#1A1A18", borderRadius: 16, padding: "16px 20px",
+    background: "var(--q-text-primary)", borderRadius: 18, padding: "16px 20px",
     display: "flex", justifyContent: "space-between", alignItems: "center",
     marginBottom: 16,
+    boxShadow: "0 8px 30px rgba(0,0,0,0.2)",
   },
-  amountLabel: { fontSize: 13, color: "#888", fontFamily: "'DM Sans', sans-serif" },
-  amountValue: { fontFamily: "'Syne', sans-serif", fontSize: 20, fontWeight: 700, color: "#fff" },
+  amountLabel: { fontSize: 13, color: "rgba(255,255,255,0.55)", fontFamily: "var(--font-dm-sans)" },
+  amountValue: { fontFamily: "var(--font-dm-serif)", fontSize: 22, fontWeight: 400, color: "#fff" },
 
   qrCard: {
-    background: "#fff", borderRadius: 20, border: "1px solid #EDEBE4",
+    background: "var(--q-surface)", borderRadius: 20, border: "1px solid var(--q-border)",
     padding: "28px 20px", marginBottom: 16,
     display: "flex", flexDirection: "column" as const, alignItems: "center", gap: 16,
-    minHeight: 300,
+    minHeight: 300, boxShadow: "var(--q-shadow-card)",
   },
 
   qrPlaceholder: { display: "flex", flexDirection: "column" as const, alignItems: "center", gap: 16, padding: "40px 0" },
-  spinner: { width: 36, height: 36, border: "3px solid #F0EDE6", borderTop: "3px solid #C8702A", borderRadius: "50%", animation: "spin 0.8s linear infinite" },
-  loadingText: { fontSize: 14, color: "#aaa" },
+  qrPlaceholderBox: { width: 220, height: 220, background: "#f5f3ee", borderRadius: 12, display: "flex", alignItems: "center", justifyContent: "center" },
 
   errorBox: { display: "flex", flexDirection: "column" as const, alignItems: "center", gap: 10, padding: "20px 0" },
   errorText: { fontSize: 14, color: "#E24B4A", textAlign: "center" as const },
-  retryBtn: { background: "#1A1A18", color: "#fff", border: "none", borderRadius: 10, padding: "10px 24px", fontSize: 13, cursor: "pointer" },
+  retryBtn: { background: "var(--q-text-primary)", color: "#fff", border: "none", borderRadius: 12, padding: "10px 24px", fontSize: 13, cursor: "pointer", fontFamily: "var(--font-dm-sans)" },
 
   qrImageWrap: { position: "relative" as const, display: "flex", alignItems: "center", justifyContent: "center" },
   expiredOverlay: { width: 220, height: 220, borderRadius: 12, background: "#F5F3EE", display: "flex", flexDirection: "column" as const, alignItems: "center", justifyContent: "center", gap: 8 },
-  expiredText: { fontSize: 13, fontWeight: 500, color: "#888" },
-  refreshBtn: { background: "#1A1A18", color: "#fff", border: "none", borderRadius: 8, padding: "8px 18px", fontSize: 12, cursor: "pointer", marginTop: 4 },
+  expiredText: { fontSize: 14, fontWeight: 600, color: "#E24B4A" },
+  refreshBtn: { background: "var(--q-text-primary)", color: "#fff", border: "none", borderRadius: 10, padding: "8px 18px", fontSize: 12, cursor: "pointer", marginTop: 4, fontFamily: "var(--font-dm-sans)" },
 
   qrisLabel: { display: "flex", flexDirection: "column" as const, alignItems: "center", gap: 2 },
-  qrisText: { fontFamily: "'Syne', sans-serif", fontSize: 18, fontWeight: 700, color: "#1A1A18", letterSpacing: 2 },
-  qrisSubtext: { fontSize: 11, color: "#bbb" },
+  qrisText: { fontFamily: "var(--font-dm-sans)", fontSize: 18, fontWeight: 700, color: "#1A1A18", letterSpacing: 2 },
 
-  timerWrap: { display: "flex", alignItems: "center", gap: 8 },
+  timerRow: { display: "flex", alignItems: "center", gap: 8, marginTop: 4 },
   timerLabel: { fontSize: 12, color: "#888" },
-  timerValue: { fontFamily: "'Syne', sans-serif", fontSize: 18, fontWeight: 700, color: "#1A1A18" },
-  timerValueUrgent: { fontFamily: "'Syne', sans-serif", fontSize: 18, fontWeight: 700, color: "#E24B4A" },
+  timerValue: { fontFamily: "var(--font-dm-sans)", fontSize: 18, fontWeight: 700, color: "#1A1A18" },
+  timerValueUrgent: { fontFamily: "var(--font-dm-sans)", fontSize: 18, fontWeight: 700, color: "#E24B4A" },
 
   copyBtn: {
-    width: "100%", background: "#F0EDE6", color: "#1A1A18",
-    border: "none", borderRadius: 12, padding: "12px 20px",
+    width: "100%", background: "var(--q-bg-subtle)", color: "var(--q-text-primary)",
+    border: "1px solid var(--q-border)", borderRadius: 14, padding: "12px 20px",
     fontSize: 13, fontWeight: 500, cursor: "pointer",
-    fontFamily: "'DM Sans', sans-serif",
+    fontFamily: "var(--font-dm-sans)", transition: "background 0.15s",
   },
 
   // ── Simulation card ──────────────────────────────────────────────────────────
   simCard: {
     background: "#FFFBF0",
     border: "1.5px dashed #F0C853",
-    borderRadius: 16,
+    borderRadius: 20,
     padding: "18px",
     marginBottom: 16,
     display: "flex",
     flexDirection: "column" as const,
     gap: 12,
+    boxShadow: "var(--q-shadow-sm)",
   },
   simBadgeRow: { display: "flex", alignItems: "center", gap: 8 },
-  simBadge: { background: "#F0C853", color: "#7A5C00", borderRadius: 8, padding: "3px 10px", fontSize: 12, fontWeight: 700, fontFamily: "'DM Sans', sans-serif" },
-  simBadgeLabel: { fontSize: 11, color: "#C8A000", fontWeight: 500 },
-  simDesc: { fontSize: 13, color: "#7A6800", lineHeight: 1.5 },
+  simBadge: { background: "#F0C853", color: "#7A5C00", borderRadius: 8, padding: "3px 10px", fontSize: 12, fontWeight: 700, fontFamily: "var(--font-dm-sans)" },
+  simTitle: { fontSize: 14, fontWeight: 700, color: "#7A5C00" },
+  simDesc: { fontSize: 12.5, color: "#856404", lineHeight: 1.5 },
   simBtn: {
-    width: "100%",
-    background: "linear-gradient(135deg, #F0C853 0%, #E8A000 100%)",
-    color: "#3A2E00",
-    border: "none",
-    borderRadius: 12,
-    padding: "14px 20px",
-    fontSize: 14,
-    fontWeight: 700,
-    cursor: "pointer",
-    fontFamily: "'DM Sans', sans-serif",
-    display: "flex",
-    alignItems: "center",
-    justifyContent: "center",
-    gap: 8,
-    boxShadow: "0 4px 16px rgba(240, 200, 83, 0.4)",
+    background: "#F0C853", color: "#7A5C00", border: "none",
+    borderRadius: 12, padding: "12px 20px", fontSize: 13,
+    fontWeight: 700, cursor: "pointer",
+    fontFamily: "var(--font-dm-sans)", transition: "background 0.15s",
   },
-  simBtnLoading: {
-    width: "100%",
-    background: "#F0EDE6",
-    color: "#888",
-    border: "none",
-    borderRadius: 12,
-    padding: "14px 20px",
-    fontSize: 14,
-    fontWeight: 600,
-    cursor: "not-allowed",
-    fontFamily: "'DM Sans', sans-serif",
-    display: "flex",
-    alignItems: "center",
-    justifyContent: "center",
-    gap: 8,
+  simBtnDisabled: {
+    background: "#F9EBBC", color: "#B5A165", border: "none",
+    borderRadius: 12, padding: "12px 20px", fontSize: 13,
+    fontWeight: 700, cursor: "not-allowed",
+    fontFamily: "var(--font-dm-sans)",
   },
   simBtnSuccess: {
     width: "100%",
@@ -505,13 +487,13 @@ const styles: Record<string, React.CSSProperties> = {
   },
   simSuccessNote: { fontSize: 12, color: "#1A7A47", textAlign: "center" as const },
 
-  stepsCard: { background: "#fff", borderRadius: 16, border: "1px solid #EDEBE4", padding: "16px 18px", marginBottom: 14 },
+  stepsCard: { background: "var(--q-surface)", borderRadius: 20, border: "1px solid var(--q-border)", padding: "16px 18px", marginBottom: 14, boxShadow: "var(--q-shadow-card)" },
   sectionLabel: { fontSize: 11, fontWeight: 500, letterSpacing: "0.08em", color: "#b0aa9f", textTransform: "uppercase" as const, marginBottom: 12 },
   stepRow: { display: "flex", gap: 12, alignItems: "flex-start", marginBottom: 10 },
   stepNum: { width: 22, height: 22, borderRadius: "50%", background: "#1A1A18", color: "#fff", fontSize: 11, fontWeight: 700, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, marginTop: 1 },
   stepText: { fontSize: 13, color: "#555", lineHeight: 1.5 },
 
-  pollingBanner: { display: "flex", alignItems: "center", justifyContent: "center", gap: 8, padding: "12px", background: "#EAF3DE", borderRadius: 12 },
+  pollingBanner: { display: "flex", alignItems: "center", justifyContent: "center", gap: 8, padding: "12px", background: "#E8F8EE", borderRadius: 14, border: "1px solid #c3ecd5" },
   pollingDot: { width: 8, height: 8, borderRadius: "50%", background: "#639922", animation: "pulse 1.5s ease-in-out infinite" },
   pollingText: { fontSize: 13, color: "#3B6D11", fontWeight: 500 },
 };

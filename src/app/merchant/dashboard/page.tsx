@@ -67,7 +67,7 @@ export default function MerchantDashboard() {
   if (newOrderAlert) {
     // Show a visual flash on the screen
     toast("PESANAN BARU MASUK! 🛎️", {
-      description: "Silakan cek kolom 'Menunggu'",
+      description: "Silakan cek kolom 'Diproses'",
       duration: 5000,
       position: "top-center",
       className: "bg-primary text-primary-foreground border-none font-bold text-lg",
@@ -83,8 +83,8 @@ export default function MerchantDashboard() {
   const totalRevenue = todayOrders
     .filter(o => o.status !== "CANCELLED")
     .reduce((sum, o) => sum + o.total_amount, 0)
-  const pendingCount = orders.filter(o => o.status === "PENDING").length
   const preparingCount = orders.filter(o => o.status === "PREPARING").length
+  const readyCount = orders.filter(o => o.status === "READY").length
 
   return (
     <div className="min-h-screen bg-background flex flex-col h-screen overflow-hidden">
@@ -128,8 +128,8 @@ export default function MerchantDashboard() {
             <StatsBar 
               totalOrdersToday={todayOrders.length}
               totalRevenueToday={totalRevenue}
-              pendingCount={pendingCount}
               preparingCount={preparingCount}
+              readyCount={readyCount}
             />
             <OrderBoard 
               orders={orders} 
