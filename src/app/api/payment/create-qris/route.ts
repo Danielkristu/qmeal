@@ -1,5 +1,6 @@
 import { NextResponse, NextRequest } from "next/server"
 import { supabase } from "@/lib/supabase-server"
+import { formatOrderRefFromId } from "@/lib/order"
 
 const XENDIT_BASE = "https://api.xendit.co"
 const XENDIT_API_VERSION = "2022-07-31"
@@ -23,7 +24,7 @@ export async function POST(req: NextRequest) {
     const expiresAt = new Date(Date.now() + 15 * 60 * 1000).toISOString() // 15 min
 
     // ── 1. Create order in Supabase first ─────────────────────────────────────
-    const orderNumber = `QM-${Date.now().toString().slice(-6)}`
+    const orderNumber = formatOrderRefFromId()
     const { data: order, error: orderError } = await supabase
       .from("orders")
       .insert({

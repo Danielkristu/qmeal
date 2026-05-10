@@ -25,7 +25,7 @@ export async function POST(req: NextRequest) {
     }
 
     // Generate QM-XXXX order number (max 4 digits)
-    const orderNumber = formatOrderRefFromId(Date.now());
+    const orderNumber = formatOrderRefFromId();
 
     // Calculate totals and validate items
     let totalAmount = 0;
